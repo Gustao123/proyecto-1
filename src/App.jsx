@@ -25,6 +25,7 @@ const App= ()=> {
               <Route path="/catalogo" element={<Catalogo/>}/>
               <Route path="/productos" element={<RutaProtegida><Productos/></RutaProtegida>}/>
               <Route path="*" element={<Pagina404/>}/>
+              <Route path="/login" element={<Login />} />
 
               
 
