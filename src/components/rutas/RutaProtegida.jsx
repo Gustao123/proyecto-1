@@ -1,19 +1,14 @@
-import React, {useEfect, useState} from "react"
+import React, { Children } from "react";
+import { Navigate } from "react-router-dom";
 
-import {Container, Row, Col, Button} from "react-bootstrap"
+const RutaProtegida = ({children})=>{
 
+  const estaLogueado = !!localStorage.getItem("usuario-supabase");
 
-const RutaProtegida =()=>{
-  return(
-    <Container className="mt-3">
-      <Row className="align-items-center">
-        <Col>
-          <h2><i className="bi-house-fill me-2"></i>Categorias</h2>
-        </Col>
+  console.log("Usuario autenticado:", estaLogueado);
 
-      </Row>
-    </Container>
-  )
-}
+  return estaLogueado ? children : <Navigate to="/login" replace />;
+};
+
 
 export default RutaProtegida;

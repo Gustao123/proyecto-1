@@ -113,7 +113,7 @@ const Encabezado = () => {
               </Nav.Link>
             )}
 
-            <hr />
+            
           </Nav>
 
           {/* Información de usuario y cerrar sesión */}
