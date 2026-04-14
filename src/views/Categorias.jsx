@@ -1,8 +1,9 @@
-import React, { useState } from "react";
-import { Container, Row, Col, Button } from "react-bootstrap";
+import React, { useState, useEffect } from "react";
+import { Container, Row, Col, Button, Spinner } from "react-bootstrap";
 import { supabase } from "../database/supabaseconfig";
 import ModalRegistroCategoria from "../components/categorias/ModalRegistroCategoria";
 import NotificacionOperacion from "../components/NotificacionOperacion";
+import TablaCategoria from "../components/categorias/TablaCategorias";
 
 const Categorias = () => {
 
@@ -10,6 +11,22 @@ const Categorias = () => {
         mostrar: false, 
         mensaje: "", 
         tipo: "" 
+    });
+
+    
+
+
+    const [categorias, setCategorias] = useState([]);
+    const [cargando, setCargando] = useState(true);
+    const [mostrarModalEliminacion, setMostrarModalEliminacion] = useState(false);
+    const [categoriaAEliminar, setCategoriaAEliminar]= useState(null);
+    const [mostrarModalEdicion, setMostrarModalEdicion] = useState(false);
+
+
+    const [categoriaEditar, setCategoriaEditar]= useState({
+        id_categoria: "",
+        nombre_categoria: "",
+        descripcion_categoria: "",
     });
 
     const [mostrarModal, setMostrarModal] = useState(false);
@@ -26,6 +43,59 @@ const Categorias = () => {
             [name]: value,
         }));
     };
+
+
+    const abrirModalEdicion = (categoria)=>{
+        setCategoriaEditar({
+            id_categoria: categoria.id_categoria,
+            nombre_categoria: categoria.nombre_categoria,
+            descripcion_categoria: categoria.descripcion_categoria,
+        });
+        setMostrarModalEdicion(true);
+    };
+
+
+    const abrirModalEliminacion = (categoria)=>{
+        setCategoriaAEliminar(categoria);
+        setMostrarModalEliminacion(true);
+    };
+
+
+    const cargarCategoria = async()=>{
+        try{
+            setCargando(true);
+            const {data, error} = await supabase
+            .from("categorias")
+            .select("*")
+            .order("id_categoria", {ascending: true});
+            if(error){
+                console.error("Error al cargar categorias:", error.message);
+                setToast({
+                    mostrar:true,
+                    mensaje:"Error al cargar categorias.",
+                    tipo:"error"
+                });
+                return;
+            }
+            setCategorias(data || []);
+        }catch (err){
+            console.error("Excepcion al cargar categorias:", err.message)
+            setToast({
+                mostrar:true,
+                mensaje: "Error inesperado al cargar categorias.",
+                tipo: "error",
+            });
+        } finally {
+            setCargando(false);
+        }
+    };
+
+    useEffect(() => {
+    cargarCategoria();
+    }, []);
+
+
+
 
     const agregarCategoria = async () => {
         try {
@@ -54,6 +124,9 @@ const Categorias = () => {
                 tipo: "exito",
             });
 
+            await cargarCategoria();
+        
+        
             setNuevaCategoria({ nombre_categoria: "", descripcion_categoria: "" });
             setMostrarModal(false);
 
@@ -85,6 +158,27 @@ const Categorias = () => {
             </Row>
 
             <hr />
+
+            {cargando && (
+                <Row className="text-center my-5">
+                    <Col>
+                    <Spinner animation="border" variant="success" size="lg"/>
+                    <p className="mt-3 text-muted">Cargando categorias...</p>
+                    </Col>
+                </Row>
+            )}
+
+            {!cargando && categorias.length>0 &&(
+                <Row>
+                    <Col lg={12} className="d-none d-lg-block">
+                        <TablaCategoria
+                        categorias={categorias}
+                        abrirModalEdicion={abrirModalEdicion}
+                        abrirModalEliminacion={abrirModalEliminacion}
+                        />
+                    </Col>
+                </Row>
+            )}
 
             <ModalRegistroCategoria
                 mostrarModal={mostrarModal}
