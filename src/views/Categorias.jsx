@@ -4,6 +4,7 @@ import { supabase } from "../database/supabaseconfig";
 import ModalRegistroCategoria from "../components/categorias/ModalRegistroCategoria";
 import NotificacionOperacion from "../components/NotificacionOperacion";
 import TablaCategoria from "../components/categorias/TablaCategorias";
+import TarjetaCategoria from "../components/categorias/TarjetaCategoria";
 
 const Categorias = () => {
 
@@ -142,6 +143,8 @@ const Categorias = () => {
 
     return (
         <Container>
+
+        
         <Row className="align-items-center mb-3">
                 <Col xs={9} sm={7} md={7} lg={7}>
                     <h3 className="mb-0">
@@ -179,6 +182,14 @@ const Categorias = () => {
                     </Col>
                 </Row>
             )}
+
+            <Col xs={12} sm={12} md={12} className="d-lg-none">
+                <TarjetaCategoria
+                    categorias={categorias}
+                    abrirModalEdicion={abrirModalEdicion}
+                    abrirModalEliminacion={abrirModalEliminacion}
+                />
+            </Col>
 
             <ModalRegistroCategoria
                 mostrarModal={mostrarModal}
