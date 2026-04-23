@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Container, Row, Col, Button, Spinner } from "react-bootstrap";
+import { Container, Row, Col, Button, Spinner, Alert } from "react-bootstrap";
 import { supabase } from "../database/supabaseconfig";
 import ModalRegistroCategoria from "../components/categorias/ModalRegistroCategoria";
 import NotificacionOperacion from "../components/NotificacionOperacion";
@@ -7,6 +7,8 @@ import TablaCategoria from "../components/categorias/TablaCategorias";
 import TarjetaCategoria from "../components/categorias/TarjetaCategoria";
 import ModalEdicionCategoria from "../components/categorias/ModalEdicionCategoria";
 import ModalEliminacionCategoria from "../components/categorias/ModalEliminacionCategoria";
+import CuadroBusquedas from "../components/busquedas/CuadroBusquedas";
+import Paginacion from "../components/ordenamiento/Paginacion";
 
 const Categorias = () => {
 
@@ -24,6 +26,17 @@ const Categorias = () => {
     const [mostrarModalEliminacion, setMostrarModalEliminacion] = useState(false);
     const [categoriaAEliminar, setCategoriaAEliminar]= useState(null);
     const [mostrarModalEdicion, setMostrarModalEdicion] = useState(false);
+
+    const [textoBusqueda, setTextoBusqueda] = useState("");
+    const [categoriaFiltradas, setCategoriasFiltradas]= useState([]);
+
+    const [registrosPorPagina, establecerRegistrosPorPagina] = useState(5);
+    const [paginaActual, establecerPaginaActual] = useState(1);
+
+    const categoriasPaginadas = categoriaFiltradas.slice(
+    (paginaActual - 1) * registrosPorPagina,
+    paginaActual * registrosPorPagina
+    );
 
 
     const [categoriaEditar, setCategoriaEditar]= useState({
@@ -94,7 +107,7 @@ const Categorias = () => {
     };
 
     useEffect(() => {
-    cargarCategoria();
+    cargarCategorias();
     }, []);
 
     const manejoCambioInputEdicion = (e) => {
@@ -238,6 +251,26 @@ const eliminarCategoria = async () => {
         }
     };
 
+
+    const manejarBusqueda = (e)=>{
+        setTextoBusqueda(e.target.value);
+    }
+
+
+    useEffect(()=>{
+        if(!textoBusqueda.trim()){
+            setCategoriasFiltradas(categorias);
+        }else{
+            const textoLower = textoBusqueda.toLowerCase().trim();
+            const filtradas = categorias.filter(
+                (cat)=>
+                    cat.nombre_categoria.toLowerCase().includes(textoLower)||
+                (cat.descripcion_categoria && cat.descripcion_categoria.toLowerCase().includes(textoLower))
+            );
+            setCategoriasFiltradas(filtradas);
+        }
+    },[textoBusqueda, categorias]);
+
     return (
         <Container>
 
@@ -259,6 +292,29 @@ const eliminarCategoria = async () => {
 
             <hr />
 
+            <Row className="mb-4">
+                <Col md={6} lg={5}>
+                <CuadroBusquedas
+                textoBusqueda={textoBusqueda}
+                manejarCambioBusqueda={manejarBusqueda}
+                placeholder="Buscar por nombre o decripción"
+                />
+                </Col>
+            </Row>
+
+            {!cargando && textoBusqueda.trim() && categoriaFiltradas.length === 0 &&(
+            <Row className="mb-4">
+                <Col>
+                    <Alert variant="info" className="text-center">
+                        <i className="bi bi-info-circle me-2"></i>
+                        No se encontraron categorias que coincidan con "{textoBusqueda}"
+                    </Alert>
+                </Col>
+            </Row> 
+            )}
+
+        
+
             {cargando && (
                 <Row className="text-center my-5">
                     <Col>
@@ -270,6 +326,15 @@ const eliminarCategoria = async () => {
 
             {!cargando && categorias.length>0 &&(
                 <Row>
+
+                    <Col xs={12} sm={12} md={12} className="d-lg-none">
+                        <TablaCategoria
+                        categorias={categoriaFiltradas}
+                        abrirModalEdicion={abrirModalEdicion}
+                        abrirModalEliminacion={abrirModalEliminacion}
+                        />
+                    </Col>
+
                     <Col lg={12} className="d-none d-lg-block">
                         <TablaCategoria
                         categorias={categorias}
@@ -310,6 +375,17 @@ const eliminarCategoria = async () => {
             eliminarCategoria={eliminarCategoria}
             categoria={categoriaAEliminar}
             />
+
+            {/* Paginación */}
+            {categoriaFiltradas.length > 0 && (
+            <Paginacion
+                registrosPorPagina={registrosPorPagina}
+                totalRegistros={categoriaFiltradas.length}
+                paginaActual={paginaActual}
+                establecerPaginaActual={establecerPaginaActual}
+                establecerRegistrosPorPagina={establecerRegistrosPorPagina}
+            />
+            )}
 
             <NotificacionOperacion
                 mostrar={toast.mostrar}
