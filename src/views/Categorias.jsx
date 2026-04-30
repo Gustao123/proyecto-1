@@ -327,13 +327,6 @@ const eliminarCategoria = async () => {
             {!cargando && categorias.length>0 &&(
                 <Row>
 
-                    <Col xs={12} sm={12} md={12} className="d-lg-none">
-                        <TablaCategoria
-                        categorias={categoriaFiltradas}
-                        abrirModalEdicion={abrirModalEdicion}
-                        abrirModalEliminacion={abrirModalEliminacion}
-                        />
-                    </Col>
 
                     <Col lg={12} className="d-none d-lg-block">
                         <TablaCategoria
