@@ -330,7 +330,7 @@ const eliminarCategoria = async () => {
 
                     <Col lg={12} className="d-none d-lg-block">
                         <TablaCategoria
-                        categorias={categorias}
+                        categorias={categoriasPaginadas}
                         abrirModalEdicion={abrirModalEdicion}
                         abrirModalEliminacion={abrirModalEliminacion}
                         />

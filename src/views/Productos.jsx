@@ -8,6 +8,7 @@ import CuadroBusquedas from "../components/busquedas/CuadroBusquedas"
 import TablaProductos from "../components/productos/TablaProductos"
 import TarjetaProductos from "../components/productos/TarjetasProductos"
 import ModalEliminacionProducto from "../components/productos/ModalEliminacionProducto"
+import Paginacion from "../components/ordenamiento/Paginacion";
 
 
 const Productos =()=>{
@@ -21,6 +22,16 @@ const Productos =()=>{
   const [mostrarModal, setMostrarModal] = useState(false)
   const [mostrarModalEliminacion, setMostrarModalEliminacion] = useState(false)
   const [mostrarModalEdicion, setMostrarModalEdicion] = useState(false)
+
+  const [registrosPorPagina, establecerRegistrosPorPagina] = useState(5);
+const [paginaActual, establecerPaginaActual] = useState(1);
+
+const productosPaginados = productosFiltrados.slice(
+  (paginaActual - 1) * registrosPorPagina,
+  paginaActual * registrosPorPagina
+);
+
+
 
 
   const  [nuevoProducto, setNuevoProducto] = useState({
@@ -382,7 +393,7 @@ const Productos =()=>{
       <Col lg={12} className="d-none d-lg-block">
         <TablaProductos
         categorias={categorias}
-          productos={productosFiltrados}
+          productos={productosPaginados}
           abrirModalEdicion={(prod) => {
             setProductoEditar(prod);
             setMostrarModalEdicion(true);
@@ -439,6 +450,17 @@ const Productos =()=>{
     actualizarProducto={actualizarProducto}
     categorias={categorias}
   />
+
+
+      {productosFiltrados.length > 0 && (
+  <Paginacion
+    registrosPorPagina={registrosPorPagina}
+    totalRegistros={productosFiltrados.length}
+    paginaActual={paginaActual}
+    establecerPaginaActual={establecerPaginaActual}
+    establecerRegistrosPorPagina={establecerRegistrosPorPagina}
+  />
+)}
 
   <NotificacionOperacion
     mostrar={toast.mostrar}
