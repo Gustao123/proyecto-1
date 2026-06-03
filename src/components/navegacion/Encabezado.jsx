@@ -4,7 +4,7 @@ import { Container, Nav, Navbar, Offcanvas } from "react-bootstrap";
 import logo from "../../assets/logo.png";
 import { supabase } from "../../database/supabaseconfig";
 import { useAuth } from "../../context/AuthContext";
-import ChatIA from "../ia/chatia";
+import ChatIA from "../ia/ChatIA";
 
 const Encabezado = () => {
 
@@ -64,7 +64,7 @@ const Encabezado = () => {
     } else {
       contenidoMenu = (
         <>
-         <Nav className="ms-auto pe-2">
+          <Nav className="ms-auto pe-2">
           {tienePermiso("ver_inicio") && (
           <Nav.Link
             onClick={() => manejarNavegacion("/")}
@@ -194,8 +194,8 @@ const Encabezado = () => {
   }
 
   return (
-     <>
-    <Navbar expand="md" fixed="top" className="color-navbar shadow-lg" variant="dark">
+      <>
+      <Navbar expand="md" fixed="top" className="color-navbar shadow-lg" variant="dark">
       {<Container fluid>
 
         <Navbar.Brand
