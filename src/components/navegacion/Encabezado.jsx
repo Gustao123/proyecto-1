@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Button, Container, Nav, Navbar, Offcanvas } from "react-bootstrap";
-import logo from "../../assets/logo.png";
-import { supabase } from "../../database/supabaseconfig";
+import { Container, Nav, Navbar, Offcanvas } from "react-bootstrap";
+import logo from "../../assets/Logo.png";
+import { supabase } from "../../Database/supabaseconfig";
 import { useAuth } from "../../context/AuthContext";
+import ChatIA from "../ia/chatia";
 
 const Encabezado = () => {
 
@@ -11,6 +12,7 @@ const Encabezado = () => {
   const navigate = useNavigate();
   const location = useLocation(); //Para detectar la ruta actual
   const { tienePermiso, logout, usuario } = useAuth();
+  const [mostrarChatIA, setMostrarChatIA] = useState(false);
 
   const manejarToggle = () => setMostrarMenu(!mostrarMenu);
 
@@ -19,28 +21,15 @@ const Encabezado = () => {
     setMostrarMenu(false);
   };
 
-  /*const cerrarSesion = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+  const cerrarSesion = async () => {
+  await logout();
+  setMostrarMenu(false);
+  navigate("/login");
+};
 
-      localStorage.removeItem("usuario-supabase");
-      setMostrarMenu(false);
-      navigate("/login");
-    } catch (err) {
-      console.log("Error cerrando sesión:", err.message);
-    }
-  };*/
-
-    const cerrarSesion = async () => {
-    await logout();
-    setMostrarMenu(false);
-    navigate("/login");
-  };
-
-  //Detectar Rutas Especiales
+  //Detectar rutas especiales
   const esLogin = location.pathname === "/login";
-  const esCatalogo =
+  const esCatalogo = 
     location.pathname === "/catalogo" &&
     localStorage.getItem("usuario-supabase") === null;
 
@@ -52,10 +41,10 @@ const Encabezado = () => {
       <Nav className="ms-auto pe-2">
         <Nav.Link
           onClick={() => manejarNavegacion("/login")}
-          className={mostrarMenu ? "color-texto-marca" : "text-black"}
+          className={mostrarMenu ? "color-texto-marca" : "text-white"}
         >
           <i className="bi-person-fill-lock me-2"></i>
-          Iniciar Sesión
+          Iniciar sesión
         </Nav.Link>
       </Nav>
     );
@@ -65,7 +54,7 @@ const Encabezado = () => {
         <Nav className="ms-auto pe-2">
           <Nav.Link
             onClick={() => manejarNavegacion("/catalogo")}
-            className={mostrarMenu ? "color-texto-marca" : "text-black"}
+            className={mostrarMenu ? "color-texto-marca" : "text-white"}
           >
             <i className="bi-images me-2"></i>
             <strong>Catálogo</strong>
@@ -75,111 +64,119 @@ const Encabezado = () => {
     } else {
       contenidoMenu = (
         <>
-          <Nav className="ms-auto pe-2">
-            {/*Rutas*/}
-            {tienePermiso('ver_inicio') && (
-            <Nav.Link
-              onClick={() => manejarNavegacion("/")}
-              className={mostrarMenu ? "color-texto-marca" : "text-black"}
-            >
-              {mostrarMenu ? <i className="bi-house-fill me-2"></i> : null}
-              <strong>Inicio</strong>
-            </Nav.Link>
-            )}
+         <Nav className="ms-auto pe-2">
+          {tienePermiso("ver_inicio") && (
+          <Nav.Link
+            onClick={() => manejarNavegacion("/")}
+            className={mostrarMenu ? "color-texto-marca" : "text-white"}
+          >
+            {mostrarMenu ? <i className="bi-house-fill me-2"></i> : null}
+            <strong>Inicio</strong>
+          </Nav.Link>
+        )}
 
-            {tienePermiso('ver_categorias') && (
+        {tienePermiso("ver_clientes") && (
+            <Nav.Link
+              onClick={() => manejarNavegacion("/clientes")}
+              className={mostrarMenu ? "color-texto-marca" : "text-white"}
+            >
+              {mostrarMenu ? <i className="bi-images me-2"></i> : null}
+              <strong>Clientes</strong>
+            </Nav.Link>
+          )}
+
+            {tienePermiso("ver_categorias") && (
             <Nav.Link
               onClick={() => manejarNavegacion("/categorias")}
-              className={mostrarMenu ? "color-texto-marca" : "text-black"}
+              className={mostrarMenu ? "color-texto-marca" : "text-white"}
             >
               {mostrarMenu ? <i className="bi-bookmark-fill me-2"></i> : null}
               <strong>Categorías</strong>
             </Nav.Link>
-            )}
+          )}
 
-            {tienePermiso('ver_empleados') && (
-            <Nav.Link
-              onClick={() => manejarNavegacion("/empleados")}
-              className={mostrarMenu ? "color-texto-marca" : "text-black"}
-            >
-              {mostrarMenu ? <i className="bi-bookmark-fill me-2"></i> : null}
-              <strong>Empleados</strong>
-            </Nav.Link>
-            )}
-
-            {tienePermiso('ver_permisos') && (
-            <Nav.Link
-              onClick={() => manejarNavegacion("/permisos")}
-              className={mostrarMenu ? "color-texto-marca" : "text-black"}
-            >
-              {mostrarMenu ? <i className="bi-bookmark-fill me-2"></i> : null}
-              <strong>Permisos</strong>
-            </Nav.Link>
-            )}
-
-            {tienePermiso('ver_permisos') && (
+          {tienePermiso("ver_ventas") && (
             <Nav.Link
               onClick={() => manejarNavegacion("/ventas")}
-              className={mostrarMenu ? "color-texto-marca" : "text-black"}
+              className={mostrarMenu ? "color-texto-marca" : "text-white"}
             >
               {mostrarMenu ? <i className="bi-bookmark-fill me-2"></i> : null}
               <strong>Ventas</strong>
             </Nav.Link>
-            )}
+          )}
 
-            {tienePermiso('ver_permisos') && (
-            <Nav.Link
-              onClick={() => manejarNavegacion("/clientes")}
-              className={mostrarMenu ? "color-texto-marca" : "text-black"}
-            >
-              {mostrarMenu ? <i className="bi-bookmark-fill me-2"></i> : null}
-              <strong>Clientes</strong>
-            </Nav.Link>
-            )}
-
-            {tienePermiso('ver_productos') && (
+            {tienePermiso("ver_productos") && (
             <Nav.Link
               onClick={() => manejarNavegacion("/productos")}
-              className={mostrarMenu ? "color-texto-marca" : "text-black"}
+              className={mostrarMenu ? "color-texto-marca" : "text-white"}
             >
               {mostrarMenu ? <i className="bi-bag-heart-fill me-2"></i> : null}
               <strong>Productos</strong>
             </Nav.Link>
-            )}
+          )}
 
-            
-            {/* Opción para ir al catálogo público desde admin */}
-            {tienePermiso('ver_catalogo') && (
+            {tienePermiso("ver_empleados") && (
+            <Nav.Link
+              onClick={() => manejarNavegacion("/empleados")}
+              className={mostrarMenu ? "color-texto-marca" : "text-white"}
+            >
+              {mostrarMenu ? <i className="bi-person-badge-fill me-2"></i> : null}
+              <strong>Empleados</strong>
+            </Nav.Link>
+          )}
+
+            {tienePermiso("ver_permisos") && (
+            <Nav.Link
+              onClick={() => manejarNavegacion("/permisos")}
+              className={mostrarMenu ? "color-texto-marca" : "text-white"}
+            >
+              {mostrarMenu ? <i className="bi-shield-lock-fill me-2"></i> : null}
+              <strong>Permisos</strong>
+            </Nav.Link>
+          )}
+
+            {tienePermiso("ver_catalogo") && (
             <Nav.Link
               onClick={() => manejarNavegacion("/catalogo")}
-              className={mostrarMenu ? "color-texto-marca" : "text-black"}
+              className={mostrarMenu ? "color-texto-marca" : "text-white"}
             >
               {mostrarMenu ? <i className="bi-images me-2"></i> : null}
               <strong>Catálogo</strong>
             </Nav.Link>
-            )}
+          )}
+
+          
+         {/* BOTÓN CHAT IA */}
+          <Nav.Link
+            onClick={() => setMostrarChatIA(true)}
+            className={mostrarMenu ? "color-texto-marca" : "text-white"}
+          >
+            <i className="bi bi-robot me-2"></i>
+            <strong>Chat IA</strong>
+          </Nav.Link>
+
 
             <hr />
 
-            {/* Ícono cerrar sesión en barra superior */}
+            {/*Icono cerrar sesión en barra superior */}
             {mostrarMenu ? null : (
-              <Nav.Link 
+              <Nav.Link
                 onClick={cerrarSesion}
-                className={mostrarMenu ? "color-texto-marca" : "text-black"}
+                className={mostrarMenu ? "color-texto-marca" : "text-white"}
               >
                 <i className="bi-box-arrow-right me-2"></i>
               </Nav.Link>
             )}
 
-          
+            <hr />
           </Nav>
 
-          {/* Información de usuario y cerrar sesión */}
+          {/*Información del usuario y boton cerrar sesión */}
           {mostrarMenu && (
             <div className="mt-3 p-3 rounded bg-light text-dark">
               <p className="mb-2">
                 <i className="bi-envelope-fill me-2"></i>
-                {localStorage.getItem("usuario-supabase")?.toLowerCase() || "usuario"}
+                {localStorage.getItem("usuario-supabase")?.toLowerCase() || "Usuario"}
               </p>
 
               <button
@@ -197,14 +194,16 @@ const Encabezado = () => {
   }
 
   return (
+     <>
     <Navbar expand="md" fixed="top" className="color-navbar shadow-lg" variant="dark">
-      <Container>
-        <Navbar.Brand 
+      {<Container fluid>
+
+        <Navbar.Brand
           onClick={() => manejarNavegacion(esCatalogo ? "/catalogo" : "/")}
           className="text-white fw-bold d-flex align-items-center"
-          style={{ cursor: "pointer" }}
+          style={{cursor: "pointer"}}
         >
-          <img  
+          <img
             alt=""
             src={logo}
             width="45"
@@ -212,7 +211,7 @@ const Encabezado = () => {
             className="d-inline-block me-2"
           />
           <strong>
-            <h4 className="mb-0 text-black">Discosa</h4>
+            <h4 className="mb-0">Tavocode</h4>
           </strong>
         </Navbar.Brand>
 
@@ -224,7 +223,7 @@ const Encabezado = () => {
           />
         )}
 
-        {/* Menú lateral */}
+        {/*Menú lateral */}
         <Navbar.Offcanvas
           id="menu-offcanvas"
           placement="end"
@@ -232,16 +231,22 @@ const Encabezado = () => {
           onHide={() => setMostrarMenu(false)}
         >
           <Offcanvas.Header closeButton>
-            <Offcanvas.Title>Menú Discosa</Offcanvas.Title>
+            <Offcanvas.Title>Menú NonitoCorp</Offcanvas.Title>
           </Offcanvas.Header>
 
           <Offcanvas.Body>
             {contenidoMenu}
           </Offcanvas.Body>
         </Navbar.Offcanvas>
-      </Container>
+      </Container>}
     </Navbar>
+
+    <ChatIA
+      mostrar={mostrarChatIA}
+      onCerrar={() => setMostrarChatIA(false)}
+    />
+  </>
   );
-};
+}
 
 export default Encabezado;
