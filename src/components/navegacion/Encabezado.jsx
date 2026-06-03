@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Container, Nav, Navbar, Offcanvas } from "react-bootstrap";
-import logo from "../../assets/Logo.png";
+import logo from "../../assets/logo.png";
 import { supabase } from "../../Database/supabaseconfig";
 import { useAuth } from "../../context/AuthContext";
 import ChatIA from "../ia/chatia";
