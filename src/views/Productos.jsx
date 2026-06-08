@@ -9,6 +9,7 @@ import TablaProductos from "../components/productos/TablaProductos"
 import TarjetaProductos from "../components/productos/TarjetasProductos"
 import ModalEliminacionProducto from "../components/productos/ModalEliminacionProducto"
 import Paginacion from "../components/ordenamiento/Paginacion";
+import ModalQRProducto from "../components/productos/ModalQRProducto";
 
 
 const Productos =()=>{
@@ -31,6 +32,13 @@ const productosPaginados = productosFiltrados.slice(
   paginaActual * registrosPorPagina
 );
 
+const [mostrarModalQR, setMostrarModalQR] = useState(false);
+const [productoQR, setProductoQR] = useState(null);
+
+const generarQRImagen = (producto) => {
+  setProductoQR(producto);
+  setMostrarModalQR(true);
+};
 
 
 
@@ -333,6 +341,43 @@ const productosPaginados = productosFiltrados.slice(
   }
 };
 
+const copiarProducto = (producto) => {
+  const categoria = categorias.find(
+    (cat) => cat.id_categoria === producto.categoria_producto
+  );
+
+  const texto = `
+ID: ${producto.id_producto}
+Producto: ${producto.nombre_producto}
+Categoría: ${categoria ? categoria.nombre_categoria : "Sin categoría"}
+Precio: $${producto.precio_venta}
+Descripción: ${producto.descripcion_producto || "Sin descripción"}
+`;
+
+  try {
+    const textarea = document.createElement("textarea");
+    textarea.value = texto;
+
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand("copy");
+    document.body.removeChild(textarea);
+
+    setToast({
+      mostrar: true,
+      mensaje: `Producto "${producto.nombre_producto}" copiado al portapapeles`,
+      tipo: "exito",
+    });
+  } catch (err) {
+    console.error("Error al copiar:", err);
+
+    setToast({
+      mostrar: true,
+      mensaje: "No se pudo copiar el producto",
+      tipo: "error",
+    });
+  }
+};
 
   return(
     <Container className="mt-3">
@@ -393,6 +438,8 @@ const productosPaginados = productosFiltrados.slice(
       <Col lg={12} className="d-none d-lg-block">
         <TablaProductos
         categorias={categorias}
+        copiarProducto={copiarProducto}
+        generarQRImagen={generarQRImagen}
           productos={productosPaginados}
           abrirModalEdicion={(prod) => {
             setProductoEditar(prod);
@@ -412,6 +459,8 @@ const productosPaginados = productosFiltrados.slice(
     <TarjetaProductos
     categorias={categorias}
       productos={productosFiltrados}
+      copiarProducto={copiarProducto}
+      generarQRImagen={generarQRImagen}
       abrirModalEdicion={(prod) => {
         setProductoEditar(prod);
         setMostrarModalEdicion(true);

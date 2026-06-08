@@ -6,7 +6,9 @@ const TablaProductos = ({
   productos,
   categorias,
   abrirModalEdicion,
-  abrirModalEliminacion
+  abrirModalEliminacion,
+  copiarProducto,
+  generarQRImagen
 }) => {
 
   const [loading, setLoading] = useState(true);
@@ -80,7 +82,17 @@ const TablaProductos = ({
                       onClick={()=> abrirModalEdicion(producto)}
                     >
                       <i className="bi bi-pencil"></i>
+
                     </Button>
+
+                    <Button
+                    size="sm"
+                    variant="outline-info"
+                    className="me-1"
+                    onClick={() => copiarProducto(producto)}
+                  >
+                    <i className="bi bi-clipboard"></i>
+                  </Button>
 
                     <Button
                       size="sm"
@@ -89,6 +101,15 @@ const TablaProductos = ({
                     >
                       <i className="bi bi-trash"></i>
                     </Button>
+
+                    <Button
+                    size="sm"
+                    variant="outline-dark"
+                    className="me-1"
+                    onClick={() => generarQRImagen(producto)}
+                  >
+                    <i className="bi bi-qr-code"></i>
+                  </Button>
                   </td>
                 </tr>
               );

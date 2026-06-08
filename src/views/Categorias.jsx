@@ -388,6 +388,43 @@ const enviarCorreoCategorias = () => {
       setEnviandoCorreo(false);
     });
 };
+
+     const copiarCategoria = async (categoria) => {
+  if (!categoria) return;
+
+  const texto = `
+ID: ${categoria.id_categoria}
+Categoria: ${categoria.nombre_categoria}
+Descripción: ${categoria.descripcion_categoria || "Sin descripción"}
+`;
+
+  try {
+    if (navigator.clipboard) {
+      await navigator.clipboard.writeText(texto);
+    } else {
+      const textarea = document.createElement("textarea");
+      textarea.value = texto;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+    }
+
+    setToast({
+      mostrar: true,
+      mensaje: `Categoría "${categoria.nombre_categoria}" copiada al portapapeles`,
+      tipo: "exito",
+    });
+  } catch (err) {
+    console.error("Error al copiar:", err);
+
+    setToast({
+      mostrar: true,
+      mensaje: "No se pudo copiar al portapapeles",
+      tipo: "error",
+    });
+  }
+};
     return (
         <Container>
 
@@ -484,9 +521,11 @@ const enviarCorreoCategorias = () => {
                     <Col lg={12} className="d-none d-lg-block">
                         <TablaCategoria
                         categorias={categoriasPaginadas}
+                        copiarCategoria={copiarCategoria}
                         abrirModalEdicion={abrirModalEdicion}
                         abrirModalEliminacion={abrirModalEliminacion}
-                        />
+                        generarPDFCategoria={generarPDFCategoria}
+                      />
                     </Col>
                 </Row>
             )}
@@ -494,6 +533,7 @@ const enviarCorreoCategorias = () => {
             <Col xs={12} sm={12} md={12} className="d-lg-none">
                 <TarjetaCategoria
                     categorias={categorias}
+                    copiarCategoria={copiarCategoria} 
                     abrirModalEdicion={abrirModalEdicion}
                     abrirModalEliminacion={abrirModalEliminacion}
                     generarPDFCategoria={generarPDFCategoria}
