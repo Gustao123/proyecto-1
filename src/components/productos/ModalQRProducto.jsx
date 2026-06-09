@@ -3,43 +3,46 @@ import { Modal, Button } from "react-bootstrap";
 import QRCode from "react-qr-code";
 
 const ModalQRProducto = ({
-  mostrarModalQR,
-  setMostrarModalQR,
-  productoQR
+  mostrar,
+  onHide,
+  producto
 }) => {
-  if (!productoQR) return null;
+  if (!producto) return null;
 
   return (
-    <Modal
-      show={mostrarModalQR}
-      onHide={() => setMostrarModalQR(false)}
-      centered
-    >
+    <Modal show={mostrar} onHide={onHide} centered size="sm">
       <Modal.Header closeButton>
-        <Modal.Title>QR del Producto</Modal.Title>
+        <Modal.Title className="fs-5">
+          QR - {producto.nombre_producto}
+        </Modal.Title>
       </Modal.Header>
 
-      <Modal.Body className="text-center">
-        <h5>{productoQR.nombre_producto}</h5>
+      <Modal.Body className="text-center py-4">
+        {producto.url_imagen ? (
+          <>
+            <QRCode
+              value={producto.url_imagen}
+              size={230}
+              className="mx-auto shadow-sm"
+            />
 
-        <div className="bg-white p-3 d-inline-block">
-          <QRCode
-            value={JSON.stringify({
-              id: productoQR.id_producto,
-              nombre: productoQR.nombre_producto,
-              precio: productoQR.precio_venta,
-              descripcion: productoQR.descripcion_producto
-            })}
-            size={220}
-          />
-        </div>
+            <p className="text-muted mt-3 small mb-1">
+              Escanea para ver la imagen del producto
+            </p>
+
+            <p className="text-primary small">
+              {producto.nombre_producto}
+            </p>
+          </>
+        ) : (
+          <p className="text-danger">
+            No hay imagen disponible
+          </p>
+        )}
       </Modal.Body>
 
       <Modal.Footer>
-        <Button
-          variant="secondary"
-          onClick={() => setMostrarModalQR(false)}
-        >
+        <Button variant="secondary" onClick={onHide}>
           Cerrar
         </Button>
       </Modal.Footer>

@@ -36,10 +36,18 @@ const [mostrarModalQR, setMostrarModalQR] = useState(false);
 const [productoQR, setProductoQR] = useState(null);
 
 const generarQRImagen = (producto) => {
+  if (!producto?.url_imagen) {
+    setToast({
+      mostrar: true,
+      mensaje: "Este producto no tiene imagen asociada",
+      tipo: "advertencia"
+    });
+    return;
+  }
+
   setProductoQR(producto);
   setMostrarModalQR(true);
 };
-
 
 
   const  [nuevoProducto, setNuevoProducto] = useState({
@@ -500,6 +508,12 @@ Descripción: ${producto.descripcion_producto || "Sin descripción"}
     categorias={categorias}
   />
 
+   <ModalQRProducto
+  mostrar={mostrarModalQR}
+  onHide={() => setMostrarModalQR(false)}
+  producto={productoQR}
+/>
+
 
       {productosFiltrados.length > 0 && (
   <Paginacion
@@ -517,6 +531,8 @@ Descripción: ${producto.descripcion_producto || "Sin descripción"}
     tipo={toast.tipo}
     onCerrar={() => setToast({ ...toast, mostrar: false })}
   />
+
+
 
 </Container>
   );
