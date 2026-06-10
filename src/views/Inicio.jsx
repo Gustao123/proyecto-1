@@ -122,7 +122,6 @@ const Inicio = () => {
 
   const descargarExcel = async () => {
     try {
-      setCargando(true);
       const inicioRango = `${fechaDesde} 00:00:00`;
       const finRango = `${fechaHasta} 23:59:59`;
 
@@ -187,16 +186,31 @@ const Inicio = () => {
     } catch (err) {
       console.error("Error generando Excel:", err);
       alert("Error al generar el Excel. Revisa la consola.");
-    } finally {
-      setCargando(false);
     }
   };
 
-  // PDF solo para Ventas por Hora
+  // Función auxiliar para capturar gráficos con html2canvas
+  const capturarGrafico = async (elemento) => {
+    if (!elemento) return null;
+    try {
+      // Pequeña pausa para garantizar el renderizado completo
+      await new Promise(resolve => setTimeout(resolve, 100));
+      const canvas = await html2canvas(elemento, {
+        scale: 2,
+        logging: false,
+        useCORS: true
+      });
+      return canvas.toDataURL("image/png");
+    } catch (error) {
+      console.error("Error capturando gráfico:", error);
+      return null;
+    }
+  };
+
+  // PDF solo para Ventas por Hora (líneas)
   const generarPdfVentasHora = async () => {
     try {
       const pdf = new jsPDF("p", "mm", "a4");
-
       pdf.setFontSize(18);
       pdf.setTextColor("#330775");
       pdf.setFont("helvetica", "bold");
@@ -206,33 +220,35 @@ const Inicio = () => {
       pdf.setFontSize(10);
       pdf.text(`Período: ${fechaDesde} - ${fechaHasta}`, 14, 22);
 
-      const canvas = await html2canvas(graficoHoraRef.current);
-      const imagen = canvas.toDataURL("image/png");
-      pdf.addImage(imagen, "PNG", 10, 30, 190, 80);
+      const imagen = await capturarGrafico(graficoHoraRef.current);
+      if (imagen) {
+        pdf.addImage(imagen, "PNG", 10, 30, 190, 80);
+      } else {
+        pdf.text("No se pudo generar el gráfico", 10, 30);
+      }
 
       pdf.setFontSize(14);
       pdf.setTextColor("#330775");
       pdf.setFont("helvetica", "bold");
-      pdf.text("Resumen General", 14, 115);
+      pdf.text("Resumen General", 14, 120);
       pdf.setFont("helvetica", "normal");
       pdf.setTextColor("#000000");
       pdf.setFontSize(10);
 
-      pdf.text(`Total Ventas: ${estadisticas.totalVentas.toFixed(2)}`, 14, 125);
-      pdf.text(`Ventas Efectivo: ${estadisticas.ventasEfectivo.toFixed(2)}`, 14, 132);
-      pdf.text(`Ventas Tarjeta: ${estadisticas.ventasTarjeta.toFixed(2)}`, 14, 139);
-      pdf.text(`Productos Vendidos: ${estadisticas.productosVendidos}`, 14, 146);
-      pdf.text(`Cantidad Ventas: ${estadisticas.cantidadVentas}`, 14, 153);
+      pdf.text(`Total Ventas: C$ ${estadisticas.totalVentas.toFixed(2)}`, 14, 130);
+      pdf.text(`Ventas Efectivo: C$ ${estadisticas.ventasEfectivo.toFixed(2)}`, 14, 137);
+      pdf.text(`Ventas Tarjeta: C$ ${estadisticas.ventasTarjeta.toFixed(2)}`, 14, 144);
+      pdf.text(`Productos Vendidos: ${estadisticas.productosVendidos}`, 14, 151);
+      pdf.text(`Cantidad Ventas: ${estadisticas.cantidadVentas}`, 14, 158);
 
-      const filas = estadisticas.ventasPorHora.map(item => [
-        item.hora,
-        `C$ ${item.total.toFixed(2)}`
-      ]);
-
+      const filas = estadisticas.ventasPorHora.map(item => [item.hora, `C$ ${item.total.toFixed(2)}`]);
       autoTable(pdf, {
-        startY: 160,
+        startY: 165,
         head: [["Hora", "Monto Acumulado"]],
-        body: filas
+        body: filas,
+        theme: "grid",
+        headStyles: { fillColor: [51, 7, 117], textColor: 255 },
+        alternateRowStyles: { fillColor: [240, 240, 240] }
       });
 
       const fechaActual = new Date().toLocaleDateString("en-CA", { timeZone: "America/Managua" });
@@ -243,11 +259,10 @@ const Inicio = () => {
     }
   };
 
-  // PDF solo para Ventas por Categorías
+  // PDF solo para Ventas por Categoría (pastel) - CUADRADO
   const generarPdfVentasCategorias = async () => {
     try {
       const pdf = new jsPDF("p", "mm", "a4");
-
       pdf.setFontSize(18);
       pdf.setTextColor("#330775");
       pdf.setFont("helvetica", "bold");
@@ -257,33 +272,39 @@ const Inicio = () => {
       pdf.setFontSize(10);
       pdf.text(`Período: ${fechaDesde} - ${fechaHasta}`, 14, 22);
 
-      const canvas = await html2canvas(graficoCategoriaRef.current);
-      const imagen = canvas.toDataURL("image/png");
-      pdf.addImage(imagen, "PNG", 10, 30, 120, 120);
+      const imagen = await capturarGrafico(graficoCategoriaRef.current);
+      if (imagen) {
+        // Tamaño cuadrado: 120 mm x 120 mm, centrado en A4 (210 mm ancho)
+        const ancho = 120;
+        const alto = 120;
+        const x = (210 - ancho) / 2; // 45 mm
+        pdf.addImage(imagen, "PNG", x, 30, ancho, alto);
+      } else {
+        pdf.text("No se pudo generar el gráfico", 10, 30);
+      }
 
       pdf.setFontSize(14);
       pdf.setTextColor("#330775");
       pdf.setFont("helvetica", "bold");
-      pdf.text("Resumen General", 14, 115);
+      pdf.text("Resumen General", 14, 160);
       pdf.setFont("helvetica", "normal");
       pdf.setTextColor("#000000");
       pdf.setFontSize(10);
 
-      pdf.text(`Total Ventas: ${estadisticas.totalVentas.toFixed(2)}`, 14, 125);
-      pdf.text(`Ventas Efectivo: ${estadisticas.ventasEfectivo.toFixed(2)}`, 14, 132);
-      pdf.text(`Ventas Tarjeta: ${estadisticas.ventasTarjeta.toFixed(2)}`, 14, 139);
-      pdf.text(`Productos Vendidos: ${estadisticas.productosVendidos}`, 14, 146);
-      pdf.text(`Cantidad Ventas: ${estadisticas.cantidadVentas}`, 14, 153);
+      pdf.text(`Total Ventas: C$ ${estadisticas.totalVentas.toFixed(2)}`, 14, 170);
+      pdf.text(`Ventas Efectivo: C$ ${estadisticas.ventasEfectivo.toFixed(2)}`, 14, 177);
+      pdf.text(`Ventas Tarjeta: C$ ${estadisticas.ventasTarjeta.toFixed(2)}`, 14, 184);
+      pdf.text(`Productos Vendidos: ${estadisticas.productosVendidos}`, 14, 191);
+      pdf.text(`Cantidad Ventas: ${estadisticas.cantidadVentas}`, 14, 198);
 
-      const filas = estadisticas.ventasPorCategoria.map(cat => [
-        cat.name,
-        `C$ ${cat.value.toFixed(2)}`
-      ]);
-
+      const filas = estadisticas.ventasPorCategoria.map(cat => [cat.name, `C$ ${cat.value.toFixed(2)}`]);
       autoTable(pdf, {
-        startY: 160,
+        startY: 205,
         head: [["Categoría", "Monto Acumulado"]],
-        body: filas
+        body: filas,
+        theme: "grid",
+        headStyles: { fillColor: [51, 7, 117], textColor: 255 },
+        alternateRowStyles: { fillColor: [240, 240, 240] }
       });
 
       const fechaActual = new Date().toLocaleDateString("en-CA", { timeZone: "America/Managua" });
@@ -294,7 +315,7 @@ const Inicio = () => {
     }
   };
 
-  // PDF General (ambos gráficos + tablas)
+  // PDF General (ambos gráficos) - pastel cuadrado
   const generarPdfGeneral = async () => {
     try {
       const pdf = new jsPDF("p", "mm", "a4");
@@ -308,58 +329,63 @@ const Inicio = () => {
       pdf.setFontSize(10);
       pdf.text(`Período: ${fechaDesde} - ${fechaHasta}`, 14, 22);
 
-      // Gráfico de ventas por hora
-      const canvasHora = await html2canvas(graficoHoraRef.current);
-      const imagenHora = canvasHora.toDataURL("image/png");
-      pdf.addImage(imagenHora, "PNG", 10, 30, 190, 80);
+      // Gráfico de líneas (ventas por hora) - tamaño rectangular
+      const imgHora = await capturarGrafico(graficoHoraRef.current);
+      if (imgHora) {
+        pdf.addImage(imgHora, "PNG", 10, 30, 190, 80);
+      }
 
-      // Gráfico de ventas por categoría
-      const canvasCat = await html2canvas(graficoCategoriaRef.current);
-      const imagenCat = canvasCat.toDataURL("image/png");
-      pdf.addImage(imagenCat, "PNG", 10, 120, 190, 80);
+      // Gráfico de pastel (ventas por categoría) - tamaño cuadrado de 100 mm
+      const imgCat = await capturarGrafico(graficoCategoriaRef.current);
+      if (imgCat) {
+        const anchoCat = 100;
+        const altoCat = 100;
+        const xCat = (210 - anchoCat) / 2; // centrado horizontal
+        pdf.addImage(imgCat, "PNG", xCat, 120, anchoCat, altoCat);
+      }
 
-      // Resumen General
+      // Resumen General (debajo del pastel)
       pdf.setFontSize(14);
       pdf.setTextColor("#330775");
       pdf.setFont("helvetica", "bold");
-      pdf.text("Resumen General", 14, 210);
+      pdf.text("Resumen General", 14, 230);
       pdf.setFont("helvetica", "normal");
       pdf.setTextColor("#000000");
       pdf.setFontSize(10);
 
-      pdf.text(`Total Ventas: ${estadisticas.totalVentas.toFixed(2)}`, 14, 220);
-      pdf.text(`Ventas Efectivo: ${estadisticas.ventasEfectivo.toFixed(2)}`, 14, 227);
-      pdf.text(`Ventas Tarjeta: ${estadisticas.ventasTarjeta.toFixed(2)}`, 14, 234);
-      pdf.text(`Productos Vendidos: ${estadisticas.productosVendidos}`, 14, 241);
-      pdf.text(`Cantidad Ventas: ${estadisticas.cantidadVentas}`, 14, 248);
+      pdf.text(`Total Ventas: C$ ${estadisticas.totalVentas.toFixed(2)}`, 14, 240);
+      pdf.text(`Ventas Efectivo: C$ ${estadisticas.ventasEfectivo.toFixed(2)}`, 14, 247);
+      pdf.text(`Ventas Tarjeta: C$ ${estadisticas.ventasTarjeta.toFixed(2)}`, 14, 254);
+      pdf.text(`Productos Vendidos: ${estadisticas.productosVendidos}`, 14, 261);
+      pdf.text(`Cantidad Ventas: ${estadisticas.cantidadVentas}`, 14, 268);
 
       // Tabla de ventas por hora
-      const filasHora = estadisticas.ventasPorHora.map(item => [
-        item.hora,
-        `C$ ${item.total.toFixed(2)}`
-      ]);
+      const filasHora = estadisticas.ventasPorHora.map(item => [item.hora, `C$ ${item.total.toFixed(2)}`]);
       autoTable(pdf, {
-        startY: 255,
+        startY: 275,
         head: [["Hora", "Monto Acumulado"]],
-        body: filasHora
+        body: filasHora,
+        theme: "grid",
+        headStyles: { fillColor: [51, 7, 117], textColor: 255 },
+        alternateRowStyles: { fillColor: [240, 240, 240] }
       });
 
-      // Tabla de ventas por categoría
-      const filasCat = estadisticas.ventasPorCategoria.map(cat => [
-        cat.name,
-        `C$ ${cat.value.toFixed(2)}`
-      ]);
+      // Tabla de ventas por categoría (debajo de la primera)
+      const filasCat = estadisticas.ventasPorCategoria.map(cat => [cat.name, `C$ ${cat.value.toFixed(2)}`]);
       autoTable(pdf, {
         startY: pdf.lastAutoTable.finalY + 10,
         head: [["Categoría", "Monto Acumulado"]],
-        body: filasCat
+        body: filasCat,
+        theme: "grid",
+        headStyles: { fillColor: [51, 7, 117], textColor: 255 },
+        alternateRowStyles: { fillColor: [240, 240, 240] }
       });
 
       const fechaActual = new Date().toLocaleDateString("en-CA", { timeZone: "America/Managua" });
       pdf.save(`ReporteGeneral_${fechaDesde}_${fechaHasta}_Generado_${fechaActual}.pdf`);
     } catch (error) {
-      console.error(error);
-      alert("Error generando PDF general");
+      console.error("Error en PDF general:", error);
+      alert("Error generando el reporte PDF general");
     }
   };
 
@@ -381,7 +407,6 @@ const Inicio = () => {
         <h6>Estadísticas del Negocio</h6>
       </div>
 
-      {/* Fila de fechas y botones: Excel + PDF General */}
       <Row className="mb-4 align-items-end">
         <Col xs={6} md={3}>
           <Form.Group>
@@ -407,7 +432,6 @@ const Inicio = () => {
         </Col>
       </Row>
 
-      {/* Tarjetas de resumen */}
       <Row className="g-4 mb-5">
         <Col md={6} lg={3}>
           <Card className="h-100 text-white shadow" style={{ background: "linear-gradient(135deg, #28a745, #34ce57)" }}>
@@ -443,22 +467,23 @@ const Inicio = () => {
         </Col>
       </Row>
 
-      {/* Gráficos */}
       <Row className="g-4">
-        {/* Gráfico de Líneas: Ventas por Hora */}
         <Col lg={8}>
           <Card className="shadow border-0 h-100">
-            <Card.Body ref={graficoHoraRef}>
+            <Card.Body>
               <h5 className="mb-3">Ventas por Hora (Acumulado)</h5>
-              <ResponsiveContainer width="100%" height={360}>
-                <LineChart data={estadisticas.ventasPorHora}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="hora" />
-                  <YAxis tickFormatter={(v) => `C$${v}`} />
-                  <Tooltip formatter={(v) => [`C$ ${v}`, "Monto"]} />
-                  <Line type="monotone" dataKey="total" stroke="#5e26b2" strokeWidth={4} dot={{ r: 6 }} />
-                </LineChart>
-              </ResponsiveContainer>
+              {/* Contenedor específico para el gráfico de líneas */}
+              <div ref={graficoHoraRef} style={{ width: "100%", height: 360 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={estadisticas.ventasPorHora}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="hora" />
+                    <YAxis tickFormatter={(v) => `C$${v}`} />
+                    <Tooltip formatter={(v) => [`C$ ${v}`, "Monto"]} />
+                    <Line type="monotone" dataKey="total" stroke="#5e26b2" strokeWidth={4} dot={{ r: 6 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
             </Card.Body>
             <div className="p-3 text-center border-top">
               <Button variant="danger" onClick={generarPdfVentasHora}>
@@ -469,30 +494,34 @@ const Inicio = () => {
           </Card>
         </Col>
 
-        {/* Gráfico de Torta: Ventas por Categoría */}
         <Col lg={4}>
           <Card className="shadow border-0 h-100">
-            <Card.Body ref={graficoCategoriaRef}>
+            <Card.Body>
               <h5 className="mb-3">Ventas por Categoría</h5>
-              <ResponsiveContainer width="100%" height={360}>
-                <PieChart>
-                  <Pie
-                    data={estadisticas.ventasPorCategoria.length > 0 ? estadisticas.ventasPorCategoria : [{ name: "Sin datos", value: 1 }]}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={110}
-                    label
-                  >
-                    {estadisticas.ventasPorCategoria.map((_, i) => (
-                      <Cell key={`cell-${i}`} fill={COLORES[i % COLORES.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(v) => `C$ ${v}`} />
-                </PieChart>
-              </ResponsiveContainer>
+              {/* Contenedor cuadrado para el gráfico de pastel (evita distorsión) */}
+              <div ref={graficoCategoriaRef} style={{ width: "100%", display: "flex", justifyContent: "center", alignItems: "center" }}>
+                <div style={{ width: "100%", maxWidth: 360, height: "auto" }}>
+                  <ResponsiveContainer width="100%" height={360}>
+                    <PieChart>
+                      <Pie
+                        data={estadisticas.ventasPorCategoria.length > 0 ? estadisticas.ventasPorCategoria : [{ name: "Sin datos", value: 1 }]}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={110}
+                        label
+                      >
+                        {estadisticas.ventasPorCategoria.map((_, i) => (
+                          <Cell key={`cell-${i}`} fill={COLORES[i % COLORES.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(v) => `C$ ${v}`} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
             </Card.Body>
             <div className="p-3 text-center border-top">
               <Button variant="warning" onClick={generarPdfVentasCategorias}>
